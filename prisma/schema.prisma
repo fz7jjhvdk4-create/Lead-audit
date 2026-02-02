@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model för autentisering
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions TrainingSession[]
+}
+
+// TrainingSession för att lagra träningssessioner
+model TrainingSession {
+  id              String    @id @default(cuid())
+  userId          String
+  standard        String    // ISO 9001, ISO 14001, etc.
+  type            String    // intern, extern, certifiering, övervakning
+  difficulty      String    // grundläggande, medel, avancerad
+  focusArea       String?   // specifikt fokusområde
+  annexSLChapters Int[]     // valda Annex SL-kapitel (4-10)
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SessionMessage[]
+  feedback SessionFeedback?
+
+  @@index([userId])
+}
+
+// SessionMessage för konversationshistorik
+model SessionMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String   // "user" eller "assistant"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  session TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+// SessionFeedback för detaljerad bedömning
+model SessionFeedback {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+
+  // Kompetensområden enligt ISO 19011 (poäng 1-5)
+  revisionPrinciples    Int? // Revisionsprinciper
+  questionTechnique     Int? // Frågeteknik
+  standardKnowledge     Int? // Standardkunskap
+  evidenceCollection    Int? // Bevisinhämtning
+  nonconformityClass    Int? // Avvikelseklassificering
+  communication         Int? // Kommunikation
+  openingMeeting        Int? // Startmöte
+  closingMeeting        Int? // Slutmöte
+
+  overallScore          Int?     // Totalbetyg
+  strengths             String[] // Lista över styrkor
+  developmentAreas      String[] // Lista över utvecklingsområden
+  missedFindings        String[] // Vad som missades
+  alternativeStrategies String[] // Förslag på alternativa frågestrategier
+
+  // Bedömning per Annex SL-kapitel (JSON)
+  annexSLAssessment     Json?
+
+  summary               String?  @db.Text // Sammanfattande bedömning
+  createdAt             DateTime @default(now())
+
+  session TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lead Audit Simulering
 
-## Getting Started
+En interaktiv träningssimulator för ledningssystemsrevisorer enligt ISO 19011.
 
-First, run the development server:
+## Beskrivning
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Simulatorn agerar som Auditee och Bedömare för att ge realistisk revisionsträning med:
+- Startmöte
+- Revisionsaktiviteter
+- Slutmöte
+- Bedömning enligt ISO 19011 kompetenskrav
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Fiktivt företag
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Träningen sker mot det fiktiva företaget **Nordisk Precision AB**:
+- 180 anställda
+- Tillverkande verkstadsindustri
+- Certifieringar: ISO 9001, ISO 14001, ISO 45001, IATF 16949
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech Stack
 
-## Learn More
+- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, Prisma ORM
+- **Databas:** PostgreSQL
+- **AI:** Claude AI API (Anthropic)
+- **Auth:** NextAuth.js
+- **Deployment:** Vercel
 
-To learn more about Next.js, take a look at the following resources:
+## Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Klona repot:
+   ```bash
+   git clone https://github.com/fz7jjhvdk4-create/Lead-audit.git
+   cd Lead-audit/lead-audit-app
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Installera dependencies:
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+3. Kopiera miljövariabler:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. Fyll i miljövariablerna i `.env.local`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+5. Kör databas-migrationer:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+6. Starta utvecklingsservern:
+   ```bash
+   npm run dev
+   ```
+
+7. Öppna [http://localhost:3000](http://localhost:3000)
+
+## Annex SL-struktur
+
+Simulatorn bygger på Annex SL (ISO High Level Structure) - den gemensamma ramstrukturen för alla ISO-ledningssystemstandarder:
+
+| Kapitel | Titel |
+|---------|-------|
+| 4 | Organisationens förutsättningar |
+| 5 | Ledarskap |
+| 6 | Planering |
+| 7 | Stöd |
+| 8 | Verksamhet |
+| 9 | Utvärdering av prestanda |
+| 10 | Förbättring |
+
+## Scripts
+
+- `npm run dev` - Starta utvecklingsserver
+- `npm run build` - Bygg för produktion
+- `npm run start` - Starta produktionsserver
+- `npm run lint` - Kör ESLint
+- `npm run format` - Formatera kod med Prettier
+
+## Licens
+
+Privat projekt.
