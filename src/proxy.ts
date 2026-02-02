@@ -1,37 +1,13 @@
-import { auth } from '@/lib/auth';
-import { NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
+import { authConfig } from '@/auth.config';
+import type { NextRequest } from 'next/server';
 
-// NextAuth auth wrapper för proxy
-const authProxy = auth((req) => {
-  const { nextUrl, auth: session } = req;
-  const isLoggedIn = !!session;
+const { auth } = NextAuth(authConfig);
 
-  // Publika sidor
-  const publicPaths = ['/', '/auth/login', '/auth/register'];
-  const isPublicPath = publicPaths.includes(nextUrl.pathname);
-  const isAuthPath = nextUrl.pathname.startsWith('/auth/');
-  const isApiAuthPath = nextUrl.pathname.startsWith('/api/auth/');
-
-  // API auth routes är alltid tillgängliga
-  if (isApiAuthPath) {
-    return NextResponse.next();
-  }
-
-  // Om inloggad och försöker nå auth-sidor, redirect till dashboard
-  if (isLoggedIn && isAuthPath) {
-    return NextResponse.redirect(new URL('/dashboard', nextUrl));
-  }
-
-  // Om inte inloggad och försöker nå skyddade sidor, redirect till login
-  if (!isLoggedIn && !isPublicPath) {
-    return NextResponse.redirect(new URL('/auth/login', nextUrl));
-  }
-
-  return NextResponse.next();
-});
-
-// Export som named 'proxy' för Next.js 16
-export { authProxy as proxy };
+// Wrapper funktion för Next.js 16 proxy
+export async function proxy(request: NextRequest) {
+  return auth(request as any);
+}
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
