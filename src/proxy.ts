@@ -1,7 +1,8 @@
 import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
-export default auth((req) => {
+// NextAuth auth wrapper för proxy
+const authProxy = auth((req) => {
   const { nextUrl, auth: session } = req;
   const isLoggedIn = !!session;
 
@@ -28,6 +29,9 @@ export default auth((req) => {
 
   return NextResponse.next();
 });
+
+// Export som named 'proxy' för Next.js 16
+export { authProxy as proxy };
 
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
