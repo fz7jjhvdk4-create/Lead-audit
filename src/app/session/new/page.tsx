@@ -4,6 +4,31 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Branscher
+const industries = [
+  {
+    id: 'manufacturing',
+    name: 'Verkstad/Tillverkning',
+    description: 'Precisionskomponenter, fordonsindustri, IATF 16949',
+    company: 'Nordisk Precision AB',
+    icon: '🏭',
+  },
+  {
+    id: 'food',
+    name: 'Livsmedel',
+    description: 'Livsmedelssäkerhet, FSSC 22000, HACCP',
+    company: 'Nordisk Livs AB',
+    icon: '🍽️',
+  },
+  {
+    id: 'construction',
+    name: 'Bygg/Anläggning',
+    description: 'Byggprojekt, arbetsmiljö, BF9K',
+    company: 'Nordbygg Entreprenad AB',
+    icon: '🏗️',
+  },
+];
+
 // Annex SL kapitelstruktur
 const annexSLChapters = [
   {
@@ -75,15 +100,16 @@ const difficultyLevels = [
   },
 ];
 
-type Step = 'standard' | 'type' | 'chapters' | 'difficulty' | 'options' | 'summary';
+type Step = 'industry' | 'standard' | 'type' | 'chapters' | 'difficulty' | 'options' | 'summary';
 
 export default function NewSessionPage() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<Step>('standard');
+  const [currentStep, setCurrentStep] = useState<Step>('industry');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
+  const [selectedIndustry, setSelectedIndustry] = useState<string>('');
   const [selectedStandards, setSelectedStandards] = useState<string[]>([]);
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedChapters, setSelectedChapters] = useState<number[]>([]);
@@ -91,6 +117,7 @@ export default function NewSessionPage() {
   const [hintsEnabled, setHintsEnabled] = useState<boolean>(true);
 
   const steps: { id: Step; title: string }[] = [
+    { id: 'industry', title: 'Bransch' },
     { id: 'standard', title: 'Standard' },
     { id: 'type', title: 'Revisionstyp' },
     { id: 'chapters', title: 'Fokusområden' },
@@ -103,6 +130,8 @@ export default function NewSessionPage() {
 
   const canProceed = () => {
     switch (currentStep) {
+      case 'industry':
+        return selectedIndustry !== '';
       case 'standard':
         return selectedStandards.length > 0;
       case 'type':
@@ -159,6 +188,7 @@ export default function NewSessionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          industry: selectedIndustry,
           standard: selectedStandards.join(','),
           type: selectedType,
           difficulty: selectedDifficulty,
@@ -201,7 +231,7 @@ export default function NewSessionPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Ny träningssession</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-400">
-            Konfigurera din revision med Nordisk Precision AB
+            Konfigurera din revisionsträning
           </p>
         </div>
 
@@ -257,6 +287,51 @@ export default function NewSessionPage() {
           {error && (
             <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Step: Industry */}
+          {currentStep === 'industry' && (
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Välj bransch
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                Välj vilken typ av företag du vill träna på att revidera. Varje bransch har unika dokument, scenarion och avvikelser.
+              </p>
+              <div className="grid gap-4">
+                {industries.map((industry) => (
+                  <button
+                    key={industry.id}
+                    onClick={() => setSelectedIndustry(industry.id)}
+                    className={`p-4 text-left rounded-lg border-2 transition-colors ${
+                      selectedIndustry === industry.id
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">{industry.icon}</span>
+                        <div>
+                          <span className="font-medium text-gray-900 dark:text-white">{industry.name}</span>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{industry.company}</p>
+                        </div>
+                      </div>
+                      {selectedIndustry === industry.id && (
+                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 ml-9">{industry.description}</p>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -531,6 +606,16 @@ export default function NewSessionPage() {
 
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Bransch</h3>
+                  <div className="flex items-center">
+                    <span className="text-xl mr-2">{industries.find((i) => i.id === selectedIndustry)?.icon}</span>
+                    <p className="text-gray-900 dark:text-white">
+                      {industries.find((i) => i.id === selectedIndustry)?.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Standard(er)</h3>
                   <p className="text-gray-900 dark:text-white">
                     {selectedStandards.map((s) => standards.find((st) => st.id === s)?.name).join(', ')}
@@ -586,12 +671,30 @@ export default function NewSessionPage() {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
-                    Om Nordisk Precision AB
+                    Om {industries.find((i) => i.id === selectedIndustry)?.company}
                   </h3>
                   <p className="text-sm text-blue-700 dark:text-blue-400">
-                    Du kommer att revidera Nordisk Precision AB, ett tillverkande verkstadsföretag med 180 anställda.
-                    Företaget tillverkar precisionskomponenter för fordonsindustrin och är certifierat enligt
-                    ISO 9001, ISO 14001, ISO 45001 och IATF 16949.
+                    {selectedIndustry === 'manufacturing' && (
+                      <>
+                        Du kommer att revidera Nordisk Precision AB, ett tillverkande verkstadsföretag med 180 anställda.
+                        Företaget tillverkar precisionskomponenter för fordonsindustrin och är certifierat enligt
+                        ISO 9001, ISO 14001, ISO 45001 och IATF 16949.
+                      </>
+                    )}
+                    {selectedIndustry === 'food' && (
+                      <>
+                        Du kommer att revidera Nordisk Livs AB, ett livsmedelsföretag med 145 anställda.
+                        Företaget producerar kyld och fryst färdigmat för dagligvaruhandeln och är certifierat enligt
+                        FSSC 22000, ISO 9001, ISO 14001 och BRC Food Safety.
+                      </>
+                    )}
+                    {selectedIndustry === 'construction' && (
+                      <>
+                        Du kommer att revidera Nordbygg Entreprenad AB, ett byggföretag med 210 anställda.
+                        Företaget är specialiserat på kommersiella byggprojekt och renoveringar och är certifierat enligt
+                        ISO 9001, ISO 14001, ISO 45001 och BF9K.
+                      </>
+                    )}
                   </p>
                 </div>
               </div>

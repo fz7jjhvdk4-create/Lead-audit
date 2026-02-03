@@ -12,12 +12,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { standard, type, difficulty, annexSLChapters, hintsEnabled = true } = body;
+    const { industry = 'manufacturing', standard, type, difficulty, annexSLChapters, hintsEnabled = true } = body;
 
     // Validera input
     if (!standard || !type || !difficulty || !annexSLChapters || annexSLChapters.length === 0) {
       return NextResponse.json(
         { error: 'Alla fält måste fyllas i' },
+        { status: 400 }
+      );
+    }
+
+    // Validera bransch
+    const validIndustries = ['manufacturing', 'food', 'construction'];
+    if (!validIndustries.includes(industry)) {
+      return NextResponse.json(
+        { error: 'Ogiltig bransch vald' },
         { status: 400 }
       );
     }
@@ -65,6 +74,7 @@ export async function POST(request: NextRequest) {
       type,
       difficulty,
       annexSLChapters,
+      industry,
     });
 
     // Skapa session i databasen med startmöte-meddelande
@@ -75,6 +85,7 @@ export async function POST(request: NextRequest) {
         type,
         difficulty,
         annexSLChapters,
+        industry,
         hintsEnabled: hintsEnabled ?? true,
         hintsUsed: 0,
         messages: {

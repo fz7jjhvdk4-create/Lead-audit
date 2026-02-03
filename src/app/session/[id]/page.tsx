@@ -51,6 +51,7 @@ export default async function SessionPage({ params }: PageProps) {
         type: trainingSession.type,
         difficulty: trainingSession.difficulty,
         annexSLChapters: trainingSession.annexSLChapters,
+        industry: trainingSession.industry,
         hintsEnabled: trainingSession.hintsEnabled,
         hintsUsed: trainingSession.hintsUsed,
       }}

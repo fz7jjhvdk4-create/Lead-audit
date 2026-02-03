@@ -3,11 +3,14 @@
  * Baserat på revisionstyp och valda standarder
  */
 
+import { getIndustryProfile } from './industry-profiles';
+
 interface SessionConfig {
   standard: string;
   type: string;
   difficulty: string;
   annexSLChapters: number[];
+  industry?: string;
 }
 
 const standardNames: Record<string, string> = {
@@ -72,6 +75,15 @@ const chapterTitles: Record<number, string> = {
 };
 
 export function generateOpeningMeetingMessage(config: SessionConfig): string {
+  const industryId = config.industry || 'manufacturing';
+  const industryProfile = getIndustryProfile(industryId);
+
+  // Om branschspecifik profil finns, använd den
+  if (industryProfile && industryId !== 'manufacturing') {
+    return generateIndustrySpecificOpeningMessage(config, industryProfile);
+  }
+
+  // Standard (manufacturing) meddelande
   const standards = config.standard.split(',').map(s => standardNames[s] || s);
   const auditType = auditTypeDescriptions[config.type] || auditTypeDescriptions.certifiering;
   const chapters = config.annexSLChapters
@@ -119,6 +131,85 @@ Tack Erik. Jag vill också hälsa välkommen och betona att vi ser denna revisio
 ---
 
 *Erik Johansson:*
+
+Vi lämnar nu över till er för att presentera er och gå igenom revisionsplanen. Hur vill ni lägga upp dagen?`;
+}
+
+// Generera branschspecifikt startmöte
+function generateIndustrySpecificOpeningMessage(config: SessionConfig, profile: ReturnType<typeof getIndustryProfile>): string {
+  if (!profile) return '';
+
+  const standards = config.standard.split(',').map(s => standardNames[s] || s);
+  const chapters = config.annexSLChapters
+    .sort((a, b) => a - b)
+    .map(ch => `Kapitel ${ch}: ${chapterTitles[ch]}`)
+    .join('\n   • ');
+
+  const currentTime = new Date();
+  const timeString = currentTime.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+
+  // Hitta kvalitetschef-rollen
+  const qualityManager = profile.characters.find(c => c.role === 'quality_manager');
+  const qualityManagerName = qualityManager?.name || 'Kvalitetschefen';
+  const qualityManagerTitle = qualityManager?.title || 'Kvalitetschef';
+
+  // Bygg lista över närvarande
+  const attendees = profile.characters.slice(0, 5).map(c => `${c.name} (${c.title})`);
+
+  // Branschspecifik kontext
+  let industrySpecificInfo = '';
+  if (profile.id === 'food') {
+    industrySpecificInfo = `
+**Särskild information för livsmedelsrevisioner:**
+• Hygienklädsel tillhandahålls vid besök i produktionsområden
+• Handtvätt och desinfektion krävs före inträde
+• Ingen personlig utrustning (telefon, klocka) tillåten i produktionen
+• Allergener hanteras - vänligen informera om eventuella allergier`;
+  } else if (profile.id === 'construction') {
+    industrySpecificInfo = `
+**Särskild information för byggplatsbesök:**
+• Skyddsutrustning (hjälm, skyddsväst, skyddsskor) tillhandahålls
+• Säkerhetsgenomgång krävs före besök på byggarbetsplatsen
+• ID06-kort registreras vid inpassering
+• Håll er inom markerade säkra områden`;
+  }
+
+  return `*${qualityManagerName}, ${qualityManagerTitle}:*
+
+Välkommen till ${profile.company.name} för denna revision.
+
+Klockan är nu ${timeString} och vi har samlats i vårt konferensrum.
+
+Vi har förberett oss för denna revision och ser fram emot att visa hur vi arbetar. All dokumentation finns tillgänglig och berörda medarbetare är informerade.
+
+**Närvarande från ${profile.company.name}:**
+${attendees.map(a => `• ${a}`).join('\n')}
+
+**Om företaget:**
+${profile.company.description}
+
+Vi har ${profile.company.employees} anställda och är certifierade enligt ${profile.company.certifications.join(', ')}.
+
+**Våra huvudprodukter/tjänster:**
+${profile.company.products.map(p => `• ${p}`).join('\n')}
+
+**Revision avser:**
+• Standard: ${standards.join(', ')}
+• Fokusområden:
+   • ${chapters}
+
+**Praktisk information:**
+• Lunch serveras kl 12:00
+• Kaffe och fika finns tillgängligt
+• Toaletter finns i korridoren
+• Vid eventuellt brandlarm, samling utanför huvudentrén
+${industrySpecificInfo}
+
+Vi har bokat intervjutider med berörda medarbetare enligt önskemål. Dokumentation finns förberedd.
+
+---
+
+*${qualityManagerName}:*
 
 Vi lämnar nu över till er för att presentera er och gå igenom revisionsplanen. Hur vill ni lägga upp dagen?`;
 }

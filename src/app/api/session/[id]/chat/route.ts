@@ -100,6 +100,7 @@ export async function POST(
       type: trainingSession.type,
       difficulty: trainingSession.difficulty,
       annexSLChapters: trainingSession.annexSLChapters,
+      industry: trainingSession.industry,
     });
 
     // Lägg till extra kontext för slutmöte om det behövs

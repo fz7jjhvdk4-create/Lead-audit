@@ -30,6 +30,7 @@ model TrainingSession {
   difficulty      String    // grundläggande, medel, avancerad
   focusArea       String?   // specifikt fokusområde
   annexSLChapters Int[]     // valda Annex SL-kapitel (4-10)
+  industry        String    @default("manufacturing") // US-025: verkstad, livsmedel, bygg
   hintsEnabled    Boolean   @default(true)  // US-022: Om hints är aktiverade
   hintsUsed       Int       @default(0)     // US-022: Antal hints använda
   startedAt       DateTime  @default(now())

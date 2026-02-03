@@ -8,12 +8,14 @@ import { generateObservationContext } from './observations';
 import { generateClosingMeetingContext, isClosingMeetingRequest } from './closing-meeting';
 import { generateMultistandardContext } from './multistandard-context';
 import { generateConsistencyContext } from './session-context';
+import { getIndustryProfile, getIndustrySystemPromptContext } from './industry-profiles';
 
 interface SessionConfig {
   standard: string;
   type: string;
   difficulty: string;
   annexSLChapters: number[];
+  industry?: string;
 }
 
 const companyContext = `
@@ -307,6 +309,12 @@ export function generateSystemPrompt(config: SessionConfig): string {
     return names[s] || s;
   }).join(', ');
 
+  // Hämta branschprofil om vald
+  const industryId = config.industry || 'manufacturing';
+  const industryProfile = getIndustryProfile(industryId);
+  const industryContext = getIndustrySystemPromptContext(industryId);
+  const companyName = industryProfile?.company.name || 'Nordisk Precision AB';
+
   const chapterContent = config.annexSLChapters
     .sort((a, b) => a - b)
     .map(ch => {
@@ -325,15 +333,19 @@ ${chapter.typicalFindings.map(f => `- ${f}`).join('\n')}
   const difficulty = difficultySettings[config.difficulty] || difficultySettings.medel;
   const auditType = auditTypeContext[config.type] || auditTypeContext.certifiering;
 
+  // Generera branschspecifik kontext
+  const industrySpecificContent = generateIndustrySpecificContent(industryId, config.difficulty);
+
   return `# SYSTEMINSTRUKTION: Revisionsträningssimulator
 
-Du är en AI-simulator för träning av ledningssystemsrevisorer. Du agerar som representanter för det fiktiva företaget Nordisk Precision AB och blir reviderad av användaren.
+Du är en AI-simulator för träning av ledningssystemsrevisorer. Du agerar som representanter för det fiktiva företaget ${companyName} och blir reviderad av användaren.
 
 ## DIN ROLL
 
-Du spelar ALLA roller på företaget Nordisk Precision AB. Varje karaktär har unik personlighet, kunskap och begränsningar.
+Du spelar ALLA roller på företaget ${companyName}. Varje karaktär har unik personlighet, kunskap och begränsningar.
 
-${generateCharacterContext()}
+${industryId !== 'manufacturing' ? industryContext : ''}
+${industryId === 'manufacturing' ? generateCharacterContext() : generateIndustryCharacterContext(industryId)}
 
 **VIKTIGT:** Ange alltid vilken roll du talar som: "*Erik Johansson, Kvalitetschef:*"
 
@@ -348,11 +360,13 @@ ${auditType}
 
 ${difficulty.findingComplexity}
 
-${companyContext}
+${industryId === 'manufacturing' ? companyContext : industryContext}
 
 ## ANNEX SL-STRUKTUR OCH INNEHÅLL
 
 ${chapterContent}
+
+${industrySpecificContent}
 
 ${generateMultistandardContext(selectedStandards)}
 
@@ -439,5 +453,143 @@ ${generateObservationContext(config.difficulty)}
 ${generateClosingMeetingContext()}
 
 ${generateConsistencyContext()}
+`;
+}
+
+// Generera branschspecifik karaktärskontext
+function generateIndustryCharacterContext(industryId: string): string {
+  const profile = getIndustryProfile(industryId);
+  if (!profile || profile.characters.length === 0) {
+    return generateCharacterContext();
+  }
+
+  const characterList = profile.characters.map(char => `
+### ${char.name} - ${char.title}
+- **Avdelning:** ${char.department}
+- **År på företaget:** ${char.yearsAtCompany}
+- **Personlighet:** ${char.personality}
+- **Kunskapsområden:** ${char.knowledge.join(', ')}
+- **Ansvarsområden:** ${char.responsibilities.join(', ')}
+`).join('\n');
+
+  return `
+## KARAKTÄRER PÅ ${profile.company.name.toUpperCase()}
+
+${characterList}
+`;
+}
+
+// Generera branschspecifikt innehåll
+function generateIndustrySpecificContent(industryId: string, difficulty: string): string {
+  const profile = getIndustryProfile(industryId);
+  if (!profile) return '';
+
+  if (industryId === 'food') {
+    return generateFoodIndustryContent(difficulty);
+  } else if (industryId === 'construction') {
+    return generateConstructionIndustryContent(difficulty);
+  }
+
+  return '';
+}
+
+// Livsmedelsspecifikt innehåll
+function generateFoodIndustryContent(difficulty: string): string {
+  return `
+## BRANSCHSPECIFIKA KRAV: LIVSMEDEL
+
+### HACCP-system
+Företaget har implementerat HACCP enligt Codex Alimentarius 7 principer:
+1. Faroanalys (biologisk, kemisk, fysisk)
+2. Kritiska styrpunkter (CCP) identifierade
+3. Kritiska gränser fastställda
+4. Övervakningssystem etablerat
+5. Korrigerande åtgärder definierade
+6. Verifieringsprocedurer
+7. Dokumentation och registerhållning
+
+### Kritiska styrpunkter (CCP) i produktionen
+- **CCP-1 Tillagning:** Kärntemperatur ≥75°C i 2 min
+- **CCP-2 Snabbkylning:** Från 60°C till <10°C inom 4 timmar
+- **CCP-3 Metalldetektor:** Fe ≥1.5mm, NFe ≥2.0mm, SS ≥2.5mm
+
+### FSSC 22000-specifika krav
+- Grundförutsättningsprogram (PRP)
+- Allergenhantering med riskbedömning
+- Livsmedelssäkerhetskultur
+- Spårbarhet (4 timmars mål)
+- Produktåterkallelse
+
+### Myndighetsrapportering
+- Livsmedelsverkets kontroller
+- Egenkontrollprogram
+- RASFF-anmälan vid behov
+
+### Dokument att använda
+${difficulty === 'grundlaggande' ? `
+- HACCP-plan med tydliga CCP-avvikelser
+- CCP-logg med missade mätningar
+- Leverantörsregister med utgången certifiering
+` : difficulty === 'medel' ? `
+- Spårbarhetstest som visar överskridna tidsmål
+- Allergenrengöringsprotokoll med för höga ATP-värden
+- Temperaturlogg med bruten kylkedja
+` : `
+- HACCP-verifieringsrapport med dolda systembrister
+- Leverantörsaudit med subtila avvikelser
+- Korrelation mellan CCP-data och reklamationer
+`}
+`;
+}
+
+// Byggspecifikt innehåll
+function generateConstructionIndustryContent(difficulty: string): string {
+  return `
+## BRANSCHSPECIFIKA KRAV: BYGG/ANLÄGGNING
+
+### Arbetsmiljölagstiftning
+- **BAS-P:** Byggarbetsmiljösamordnare planering
+- **BAS-U:** Byggarbetsmiljösamordnare utförande
+- **AMP:** Arbetsmiljöplan krävs för alla byggarbetsplatser
+- **AFS 1999:3:** Byggnads- och anläggningsarbete
+
+### Skyddsronder och säkerhet
+- Veckovisa skyddsronder med protokoll
+- ID06 obligatoriskt för alla på arbetsplatsen
+- Safe Construction Training
+- Fallskydd vid arbete på höjd
+
+### Kvalitetsplaner och egenkontroll
+- Projektspecifik kvalitetsplan
+- Kontrollplan enligt PBL
+- Egenkontroller med signering
+- Underentreprenörskvalificering
+
+### Branschstandarder
+- **AB04/ABT06:** Entreprenadavtal
+- **AMA:** Allmän material- och arbetsbeskrivning
+- **BF9K:** Byggbranschens kvalitetssystem
+- **BBR:** Boverkets byggregler
+
+### Underentreprenörshantering
+- Kvalificering innan arbete
+- F-skattsedel och försäkring
+- Ramavtal med krav
+- Uppföljning av UE-arbete
+
+### Dokument att använda
+${difficulty === 'grundlaggande' ? `
+- Kvalitetsplan med okvalificerade underentreprenörer
+- Skyddsrondsprotokoll med öppna avvikelser
+- UE-register med saknad dokumentation
+` : difficulty === 'medel' ? `
+- Egenkontroller med brister i signering
+- Arbetsmiljöplan som ej reviderats
+- Händelserapport utan korrigerande åtgärder
+` : `
+- Systembrister i UE-kvalificering
+- Koppling mellan tillbud och bristande utbildning
+- Konflikt mellan tidplan och kvalitetskrav
+`}
 `;
 }

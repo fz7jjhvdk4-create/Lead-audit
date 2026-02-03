@@ -29,6 +29,7 @@ interface SessionConfig {
   type: string;
   difficulty: string;
   annexSLChapters: number[];
+  industry?: string;
   hintsEnabled?: boolean;
   hintsUsed?: number;
 }
