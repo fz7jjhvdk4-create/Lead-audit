@@ -4,6 +4,8 @@
  */
 
 import { generateCharacterContext } from './character-profiles';
+import { generateObservationContext } from './observations';
+import { generateClosingMeetingContext, isClosingMeetingRequest } from './closing-meeting';
 
 interface SessionConfig {
   standard: string;
@@ -427,5 +429,9 @@ Om revisorn indikerar att revisionen är klar, förbered för slutmöte. Lyssna 
 ## FORMAT
 
 Svara alltid på svenska. Håll svaren lagom långa - som i ett verkligt samtal. Undvik att lista all information på en gång, låt revisorn driva samtalet framåt.
+
+${generateObservationContext(config.difficulty)}
+
+${generateClosingMeetingContext()}
 `;
 }

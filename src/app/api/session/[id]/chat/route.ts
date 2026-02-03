@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { generateSystemPrompt } from '@/lib/ai/system-prompt';
+import { isClosingMeetingRequest, generateClosingMeetingResponse } from '@/lib/ai/closing-meeting';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -90,13 +91,22 @@ export async function POST(
       },
     });
 
+    // Kontrollera om detta är en slutmötesförfrågan
+    const isClosingMeeting = isClosingMeetingRequest(message.trim());
+
     // Generera systemprompt
-    const systemPrompt = generateSystemPrompt({
+    let systemPrompt = generateSystemPrompt({
       standard: trainingSession.standard,
       type: trainingSession.type,
       difficulty: trainingSession.difficulty,
       annexSLChapters: trainingSession.annexSLChapters,
     });
+
+    // Lägg till extra kontext för slutmöte om det behövs
+    if (isClosingMeeting) {
+      const closingContext = generateClosingMeetingResponse(trainingSession.type);
+      systemPrompt += `\n\n## AKTIVT SLUTMÖTE\n\nRevisorn har indikerat att de vill avsluta och hålla slutmöte. Använd följande format:\n\n${closingContext}`;
+    }
 
     // Bygg meddelandehistorik för Claude
     const messageHistory: Anthropic.MessageParam[] = trainingSession.messages.map(m => ({
