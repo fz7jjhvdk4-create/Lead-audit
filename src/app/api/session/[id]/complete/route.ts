@@ -2,12 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getStandardSpecificFindings } from '@/lib/ai/multistandard-context';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const feedbackPrompt = `Du är en erfaren bedömare av revisorsträning enligt ISO 19011:2018.
+function generateFeedbackPrompt(standards: string[]): string {
+  const selectedStandards = standards;
+  const additionalFindings = getStandardSpecificFindings(selectedStandards);
+
+  const standardSpecificSection = additionalFindings.length > 0 ? `
+
+### Standardspecifika avvikelser
+${additionalFindings.map(f => `- ${f}`).join('\n')}
+` : '';
+
+  return `Du är en erfaren bedömare av revisorsträning enligt ISO 19011:2018.
 Analysera revisionskonversationen och ge en detaljerad bedömning av revisorns prestation.
 
 ## BEDÖMNINGSKRITERIER ENLIGT ISO 19011
@@ -98,7 +109,7 @@ Följande avvikelser fanns i scenariot som revisorn kunde ha upptäckt:
 - Leverantör inte godkänd/utvärderad (kap 8.4)
 - Internrevision av inköp ej genomförd enligt plan (kap 9.2)
 - Korrigerande åtgärder ej verifierade inom deadline (kap 10.2)
-
+${standardSpecificSection}
 Svara ENDAST med giltig JSON i följande format:
 {
   "revisionPrinciples": <1-5>,
@@ -117,6 +128,7 @@ Svara ENDAST med giltig JSON i följande format:
   "isoReferences": ["ISO 19011:2018 referens för förbättring", ...],
   "summary": "Sammanfattande bedömning på 2-3 meningar"
 }`;
+}
 
 export async function POST(
   request: NextRequest,
@@ -175,6 +187,10 @@ Sessionskonfiguration:
 Konversation:
 ${conversationText}
 `;
+
+    // Generera feedbackprompt baserat på valda standarder
+    const selectedStandards = trainingSession.standard.split(',');
+    const feedbackPrompt = generateFeedbackPrompt(selectedStandards);
 
     // Anropa Claude för bedömning
     const response = await anthropic.messages.create({

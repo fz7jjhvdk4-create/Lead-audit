@@ -6,6 +6,8 @@
 import { generateCharacterContext } from './character-profiles';
 import { generateObservationContext } from './observations';
 import { generateClosingMeetingContext, isClosingMeetingRequest } from './closing-meeting';
+import { generateMultistandardContext } from './multistandard-context';
+import { generateConsistencyContext } from './session-context';
 
 interface SessionConfig {
   standard: string;
@@ -352,6 +354,8 @@ ${companyContext}
 
 ${chapterContent}
 
+${generateMultistandardContext(selectedStandards)}
+
 ## REGLER FÖR INTERAKTION
 
 ### Startmöte (REDAN GENOMFÖRT)
@@ -433,5 +437,7 @@ Svara alltid på svenska. Håll svaren lagom långa - som i ett verkligt samtal.
 ${generateObservationContext(config.difficulty)}
 
 ${generateClosingMeetingContext()}
+
+${generateConsistencyContext()}
 `;
 }
