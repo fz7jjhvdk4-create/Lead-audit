@@ -30,6 +30,8 @@ model TrainingSession {
   difficulty      String    // grundläggande, medel, avancerad
   focusArea       String?   // specifikt fokusområde
   annexSLChapters Int[]     // valda Annex SL-kapitel (4-10)
+  hintsEnabled    Boolean   @default(true)  // US-022: Om hints är aktiverade
+  hintsUsed       Int       @default(0)     // US-022: Antal hints använda
   startedAt       DateTime  @default(now())
   completedAt     DateTime?
 
@@ -77,6 +79,9 @@ model SessionFeedback {
 
   // Bedömning per Annex SL-kapitel (JSON)
   annexSLAssessment     Json?
+
+  // US-023: Best practice-exempel
+  bestPracticeExamples  Json?    // Array av {area, userQuestion, optimalQuestion, technique}
 
   summary               String?  @db.Text // Sammanfattande bedömning
   createdAt             DateTime @default(now())

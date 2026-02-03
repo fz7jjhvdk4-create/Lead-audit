@@ -4,6 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { RadarChart, CompetencyBarChart } from '@/components/RadarChart';
 
+interface BestPracticeExample {
+  area: string;
+  topic: string;
+  userApproach?: string;
+  optimalApproach: string;
+  technique: string;
+  isoReference?: string;
+  explanation: string;
+}
+
 interface FeedbackData {
   revisionPrinciples: number | null;
   questionTechnique: number | null;
@@ -19,6 +29,7 @@ interface FeedbackData {
   missedFindings: string[];
   alternativeStrategies: string[];
   isoReferences: string[];
+  bestPracticeExamples?: BestPracticeExample[] | null;
   summary: string | null;
 }
 
@@ -296,6 +307,70 @@ export function FeedbackContent({ feedback, session }: Props) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Best Practice Examples */}
+      {feedback.bestPracticeExamples && feedback.bestPracticeExamples.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <svg className="w-5 h-5 text-emerald-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+            Best Practice-exempel
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Jämför ditt tillvägagångssätt med rekommenderade frågestrategier och tekniker.
+          </p>
+          <div className="space-y-4">
+            {feedback.bestPracticeExamples.map((example, i) => (
+              <div key={i} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-emerald-800 dark:text-emerald-300">
+                      {example.area}: {example.topic}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200 rounded">
+                      {example.technique}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4 space-y-3">
+                  {example.userApproach && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">
+                        Ditt tillvägagångssätt
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 italic">
+                        &quot;{example.userApproach}&quot;
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase mb-1">
+                      Optimal frågeställning
+                    </p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200 font-medium">
+                      &quot;{example.optimalApproach}&quot;
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">
+                      Förklaring
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {example.explanation}
+                    </p>
+                  </div>
+                  {example.isoReference && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      📖 {example.isoReference}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

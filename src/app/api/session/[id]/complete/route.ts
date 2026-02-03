@@ -3,6 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getStandardSpecificFindings } from '@/lib/ai/multistandard-context';
+import { generateBestPracticeAnalysisPrompt } from '@/lib/ai/best-practices';
+import { calculateHintPenalty, getHintUsageSummary } from '@/lib/ai/hints-system';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -241,6 +243,51 @@ ${conversationText}
       };
     }
 
+    // Generera best practice-exempel
+    let bestPracticeExamples = null;
+    try {
+      const userMessages = trainingSession.messages
+        .filter(m => m.role === 'user')
+        .map(m => m.content);
+
+      const bestPracticePrompt = generateBestPracticeAnalysisPrompt(
+        userMessages,
+        trainingSession.annexSLChapters
+      );
+
+      const bestPracticeResponse = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2048,
+        messages: [
+          {
+            role: 'user',
+            content: bestPracticePrompt,
+          },
+        ],
+      });
+
+      const bpTextContent = bestPracticeResponse.content.find(c => c.type === 'text');
+      if (bpTextContent && bpTextContent.type === 'text') {
+        const jsonMatch = bpTextContent.text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          bestPracticeExamples = JSON.parse(jsonMatch[0]);
+        }
+      }
+    } catch (bpError) {
+      console.error('Best practice generation error:', bpError);
+      // Fortsätt utan best practice om det misslyckas
+    }
+
+    // Beräkna hint-påverkan på betyget
+    const hintPenalty = calculateHintPenalty(trainingSession.hintsUsed, trainingSession.difficulty);
+    const adjustedOverallScore = Math.max(1, Math.round((feedbackData.overallScore || 3) - hintPenalty));
+
+    // Lägg till hint-sammanfattning i utvecklingsområden om hints användes
+    const hintSummary = getHintUsageSummary(trainingSession.hintsUsed, trainingSession.hintsEnabled);
+    const developmentAreasWithHints = trainingSession.hintsUsed > 0
+      ? [...(feedbackData.developmentAreas || []), hintSummary]
+      : feedbackData.developmentAreas || [];
+
     // Spara feedback i databasen
     const feedback = await prisma.sessionFeedback.create({
       data: {
@@ -253,12 +300,13 @@ ${conversationText}
         communication: feedbackData.communication,
         openingMeeting: feedbackData.openingMeeting,
         closingMeeting: feedbackData.closingMeeting,
-        overallScore: feedbackData.overallScore,
+        overallScore: adjustedOverallScore,
         strengths: feedbackData.strengths || [],
-        developmentAreas: feedbackData.developmentAreas || [],
+        developmentAreas: developmentAreasWithHints,
         missedFindings: feedbackData.missedFindings || [],
         alternativeStrategies: feedbackData.alternativeStrategies || [],
         isoReferences: feedbackData.isoReferences || [],
+        bestPracticeExamples: bestPracticeExamples,
         summary: feedbackData.summary,
       },
     });

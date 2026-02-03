@@ -54,12 +54,30 @@ export default async function FeedbackPage({ params }: PageProps) {
 
   // Förbered data för klientsidan
   const feedbackData = {
-    ...feedback,
+    revisionPrinciples: feedback.revisionPrinciples,
+    questionTechnique: feedback.questionTechnique,
+    standardKnowledge: feedback.standardKnowledge,
+    evidenceCollection: feedback.evidenceCollection,
+    nonconformityClass: feedback.nonconformityClass,
+    communication: feedback.communication,
+    openingMeeting: feedback.openingMeeting,
+    closingMeeting: feedback.closingMeeting,
+    overallScore: feedback.overallScore,
     strengths: feedback.strengths || [],
     developmentAreas: feedback.developmentAreas || [],
     missedFindings: feedback.missedFindings || [],
     alternativeStrategies: feedback.alternativeStrategies || [],
-    isoReferences: (feedback as { isoReferences?: string[] }).isoReferences || [],
+    isoReferences: feedback.isoReferences || [],
+    bestPracticeExamples: feedback.bestPracticeExamples as Array<{
+      area: string;
+      topic: string;
+      userApproach?: string;
+      optimalApproach: string;
+      technique: string;
+      isoReference?: string;
+      explanation: string;
+    }> | null,
+    summary: feedback.summary,
   };
 
   const sessionData = {

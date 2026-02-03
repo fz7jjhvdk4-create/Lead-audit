@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { standard, type, difficulty, annexSLChapters } = body;
+    const { standard, type, difficulty, annexSLChapters, hintsEnabled = true } = body;
 
     // Validera input
     if (!standard || !type || !difficulty || !annexSLChapters || annexSLChapters.length === 0) {
@@ -75,6 +75,8 @@ export async function POST(request: NextRequest) {
         type,
         difficulty,
         annexSLChapters,
+        hintsEnabled: hintsEnabled ?? true,
+        hintsUsed: 0,
         messages: {
           create: {
             role: 'assistant',

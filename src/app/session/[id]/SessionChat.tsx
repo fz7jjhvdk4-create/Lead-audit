@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { DocumentViewer } from '@/components/DocumentViewer';
+import { VoiceInput } from '@/components/VoiceInput';
 
 interface Message {
   id: string;
@@ -28,6 +29,8 @@ interface SessionConfig {
   type: string;
   difficulty: string;
   annexSLChapters: number[];
+  hintsEnabled?: boolean;
+  hintsUsed?: number;
 }
 
 interface SessionChatProps {
@@ -79,10 +82,16 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(config.hintsUsed || 0);
+  const [showHintPanel, setShowHintPanel] = useState(false);
+  const [hintLevel, setHintLevel] = useState<1 | 2 | 3>(1);
+  const [currentHint, setCurrentHint] = useState<string | null>(null);
+  const [isLoadingHint, setIsLoadingHint] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedStandards = config.standard.split(',');
+  const hintsEnabled = config.hintsEnabled ?? true;
 
   // Hämta dokument för valda kapitel
   const fetchDocuments = useCallback(async (chapter?: number) => {
@@ -241,6 +250,40 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
       setError(err instanceof Error ? err.message : 'Ett fel uppstod');
       setIsCompleting(false);
     }
+  };
+
+  // Hämta hint från AI
+  const requestHint = async () => {
+    if (!hintsEnabled || isLoadingHint) return;
+
+    setIsLoadingHint(true);
+    setCurrentHint(null);
+
+    try {
+      const response = await fetch(`/api/session/${sessionId}/hint`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: hintLevel }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Kunde inte hämta hint');
+      }
+
+      const data = await response.json();
+      setCurrentHint(data.hint);
+      setHintsUsed(data.hintsUsed);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kunde inte hämta hint');
+    } finally {
+      setIsLoadingHint(false);
+    }
+  };
+
+  // Hantera röstinput
+  const handleVoiceTranscript = (transcript: string) => {
+    setInput(prev => prev + (prev ? ' ' : '') + transcript);
   };
 
   return (
@@ -553,10 +596,104 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
           </div>
         </div>
 
+        {/* Hint panel */}
+        {showHintPanel && hintsEnabled && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border-t border-yellow-200 dark:border-yellow-800 px-6 py-4">
+            <div className="max-w-5xl mx-auto">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    💡 Behöver du hjälp?
+                  </h3>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                    Hints påverkar ditt slutbetyg. Använda hints: {hintsUsed}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowHintPanel(false);
+                    setCurrentHint(null);
+                  }}
+                  className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Hint level selector */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs text-yellow-700 dark:text-yellow-300">Nivå:</span>
+                {([1, 2, 3] as const).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setHintLevel(level)}
+                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                      hintLevel === level
+                        ? 'bg-yellow-600 text-white'
+                        : 'bg-yellow-100 dark:bg-yellow-800/50 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-200 dark:hover:bg-yellow-700/50'
+                    }`}
+                  >
+                    {level === 1 ? 'Subtil' : level === 2 ? 'Konkret' : 'Fullständig'}
+                  </button>
+                ))}
+                <button
+                  onClick={requestHint}
+                  disabled={isLoadingHint}
+                  className="ml-auto px-4 py-1.5 text-sm font-medium bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoadingHint ? (
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    'Få hint'
+                  )}
+                </button>
+              </div>
+
+              {/* Current hint display */}
+              {currentHint && (
+                <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                  <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {currentHint}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Input area */}
         <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-4">
           <div className="max-w-5xl mx-auto">
-            <div className="flex items-end gap-4">
+            <div className="flex items-end gap-2">
+              {/* Hints button */}
+              {hintsEnabled && (
+                <button
+                  onClick={() => setShowHintPanel(!showHintPanel)}
+                  className={`p-3 rounded-lg transition-colors ${
+                    showHintPanel
+                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                      : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  title="Få en hint"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </button>
+              )}
+
+              {/* Voice input button */}
+              <VoiceInput
+                onTranscript={handleVoiceTranscript}
+                disabled={isLoading}
+                className="p-3 rounded-lg"
+              />
+
               <div className="flex-1">
                 <textarea
                   ref={textareaRef}
@@ -564,7 +701,7 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Skriv ditt meddelande till företaget..."
+                  placeholder="Skriv eller tala in ditt meddelande..."
                   disabled={isLoading}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 />
@@ -585,7 +722,7 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
               </button>
             </div>
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-              Tryck Enter för att skicka, Shift+Enter för ny rad
+              Enter = skicka • Shift+Enter = ny rad • 🎤 = röstinput {hintsEnabled && '• 💡 = hints'}
             </p>
           </div>
         </div>

@@ -75,7 +75,7 @@ const difficultyLevels = [
   },
 ];
 
-type Step = 'standard' | 'type' | 'chapters' | 'difficulty' | 'summary';
+type Step = 'standard' | 'type' | 'chapters' | 'difficulty' | 'options' | 'summary';
 
 export default function NewSessionPage() {
   const router = useRouter();
@@ -88,12 +88,14 @@ export default function NewSessionPage() {
   const [selectedType, setSelectedType] = useState<string>('');
   const [selectedChapters, setSelectedChapters] = useState<number[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('');
+  const [hintsEnabled, setHintsEnabled] = useState<boolean>(true);
 
   const steps: { id: Step; title: string }[] = [
     { id: 'standard', title: 'Standard' },
     { id: 'type', title: 'Revisionstyp' },
     { id: 'chapters', title: 'Fokusområden' },
     { id: 'difficulty', title: 'Svårighetsgrad' },
+    { id: 'options', title: 'Alternativ' },
     { id: 'summary', title: 'Sammanfattning' },
   ];
 
@@ -109,6 +111,8 @@ export default function NewSessionPage() {
         return selectedChapters.length > 0;
       case 'difficulty':
         return selectedDifficulty !== '';
+      case 'options':
+        return true; // Alltid giltigt, hints har defaultvärde
       case 'summary':
         return true;
       default:
@@ -159,6 +163,7 @@ export default function NewSessionPage() {
           type: selectedType,
           difficulty: selectedDifficulty,
           annexSLChapters: selectedChapters,
+          hintsEnabled,
         }),
       });
 
@@ -435,6 +440,85 @@ export default function NewSessionPage() {
             </div>
           )}
 
+          {/* Step: Options */}
+          {currentStep === 'options' && (
+            <div>
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Träningsalternativ
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                Anpassa din träningsupplevelse med dessa alternativ.
+              </p>
+
+              <div className="space-y-6">
+                {/* Hints toggle */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                        Hints/tips-system
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Få hjälp om du kör fast under revisionen. Hints påverkar ditt slutbetyg något.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setHintsEnabled(!hintsEnabled)}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        hintsEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          hintsEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {hintsEnabled && (
+                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        <strong>Tips:</strong> Du kan be om hints på tre nivåer:
+                      </p>
+                      <ul className="text-sm text-blue-600 dark:text-blue-400 mt-2 space-y-1">
+                        <li>• <strong>Nivå 1:</strong> Subtil ledtråd utan att avslöja svaret</li>
+                        <li>• <strong>Nivå 2:</strong> Konkret förslag på vad du kan utforska</li>
+                        <li>• <strong>Nivå 3:</strong> Fullständigt svar med detaljer</li>
+                      </ul>
+                    </div>
+                  )}
+                  {!hintsEnabled && (
+                    <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                        <strong>Expertläge:</strong> Du tränar utan hints för en mer realistisk upplevelse.
+                        Detta ger en mer autentisk bild av din revisorskompetens.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info about voice input */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-gray-400 mt-0.5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    <div>
+                      <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                        Röstinput
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Under sessionen kan du använda mikrofonknappen för att tala in dina frågor
+                        istället för att skriva. Detta ger en mer realistisk träningsupplevelse
+                        som liknar verkliga revisionssamtal.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Step: Summary */}
           {currentStep === 'summary' && (
             <div>
@@ -482,6 +566,22 @@ export default function NewSessionPage() {
                   <p className="text-gray-900 dark:text-white">
                     {difficultyLevels.find((d) => d.id === selectedDifficulty)?.name}
                   </p>
+                </div>
+
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Träningsalternativ</h3>
+                  <div className="flex items-center gap-4">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-sm ${
+                      hintsEnabled
+                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                        : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                    }`}>
+                      {hintsEnabled ? '💡 Hints aktiverat' : '🎯 Expertläge (inga hints)'}
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                      🎤 Röstinput tillgängligt
+                    </span>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
