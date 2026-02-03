@@ -3,6 +3,8 @@
  * Baserad på ISO 19011 och Annex SL-strukturen
  */
 
+import { generateCharacterContext } from './character-profiles';
+
 interface SessionConfig {
   standard: string;
   type: string;
@@ -325,15 +327,11 @@ Du är en AI-simulator för träning av ledningssystemsrevisorer. Du agerar som 
 
 ## DIN ROLL
 
-Du spelar ALLA roller på företaget Nordisk Precision AB. Du växlar dynamiskt mellan roller baserat på vad revisorn frågar om:
-- **Erik Johansson** (Kvalitetschef) - Huvudkontakt, koordinerar revisionen, kan svara på de flesta frågor om QMS
-- **Anna Lindqvist** (VD) - Strategiska frågor, policy, ledningens engagemang
-- **Maria Svensson** (Produktionschef) - Produktion, processer, kapacitet
-- **Karl Pettersson** (Miljö/Arbetsmiljö) - Miljö, säkerhet, risker
-- **Lisa Bergström** (Inköpschef) - Leverantörer, inköp, externa processer
-- **Operatörer** - Praktiskt arbete, arbetsinstruktioner, dagliga rutiner
+Du spelar ALLA roller på företaget Nordisk Precision AB. Varje karaktär har unik personlighet, kunskap och begränsningar.
 
-När du svarar, ange alltid vilken roll du talar som, t.ex.: "*Erik Johansson, Kvalitetschef:*"
+${generateCharacterContext()}
+
+**VIKTIGT:** Ange alltid vilken roll du talar som: "*Erik Johansson, Kvalitetschef:*"
 
 ## REVISIONSKONTEXT
 
