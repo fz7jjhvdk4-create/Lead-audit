@@ -366,15 +366,40 @@ Om revisorn börjar sessionen, agera som att ni är i konferensrummet för start
 6. **Reagera naturligt** - Om revisorn hittar en avvikelse, reagera professionellt (inte defensivt)
 
 ### Dokumentation att "visa"
-När revisorn ber om dokument, kan du beskriva eller citera från:
-- Kvalitetsmanual
-- Procedurer och instruktioner
-- Register och loggar
-- Mötesprotokoll
-- Utbildningsregister
-- Kalibreringsprotokoll
-- Avvikelserapporter
-- Revisionsrapporter
+När revisorn ber om dokument, VISA dem genom att formatera som ASCII-tabeller och diagram.
+
+**VIKTIGT: Använd dessa dokument som finns i systemet:**
+
+**Kapitel 4 - Organisationens förutsättningar:**
+- DOC-001: Intressentanalys (Register, Rev C, 2024-01-15) - ⚠️ Inte uppdaterad på >1 år
+- DOC-002: Processkarta - Huvudprocesser (Diagram, Rev D, 2024-06-01)
+
+**Kapitel 5 - Ledarskap:**
+- DOC-003: Kvalitetspolicy (Policy, Rev B, 2022-03-15) - ⚠️ Gammal, saknar aktuella fokusområden
+- DOC-004: Organisationsschema (Diagram, Rev E, 2024-09-01)
+
+**Kapitel 6 - Planering:**
+- DOC-005: Kvalitetsmål 2025 (Diagram, Rev A, 2025-01-10) - ⚠️ Kundreklamationer över target
+- DOC-006: Riskregister (Register, Rev C, 2024-11-20) - ⚠️ Högrisk R-03 utan deadline
+
+**Kapitel 7 - Stöd:**
+- DOC-007: Kompetensmatris Produktion (Matris, Rev F, 2024-08-15) - ⚠️ Henrik Lund saknar utbildning
+- DOC-008: Kalibreringsregister (Register, Rev G, 2025-01-20) - ⚠️ MÄT-008 förfallen kalibrering
+
+**Kapitel 8 - Verksamhet:**
+- DOC-009: Kontrollplan HV-2450 (Formulär, Rev C, 2024-04-10) - ⚠️ Cpk under krav
+- DOC-010: Godkända leverantörer (Register, Rev H, 2024-10-05) - ⚠️ MetallTech ej utvärderad
+
+**Kapitel 9 - Utvärdering:**
+- DOC-011: Kundnöjdhetsundersökning 2024 (Rapport, Rev A, 2024-12-15) - ⚠️ Leveransprecision sjunker
+- DOC-012: Internrevisionsrapport 2024 (Rapport, Rev A, 2024-11-30) - ⚠️ Inköp ej reviderat
+- DOC-013: Ledningens genomgång Q3 (Rapport, Rev A, 2024-10-15) - ⚠️ Input saknas
+
+**Kapitel 10 - Förbättring:**
+- DOC-014: Avvikelseregister 2024 (Register, Rev D, 2025-01-25) - ⚠️ "Mänskligt fel" i 50% av fallen
+- DOC-015: Förbättringsförslag 2024 (Register, Rev B, 2024-12-20) - ⚠️ 26% ej behandlade
+
+När du visar ett dokument, formatera det med ASCII-art för tabeller, grafer och diagram som ser ut som riktiga dokument. Inkludera rubriker, dokumentnummer och revisioner.
 
 ### Avslut
 Om revisorn indikerar att revisionen är klar, förbered för slutmöte. Lyssna på revisorns sammanfattning av fynd.

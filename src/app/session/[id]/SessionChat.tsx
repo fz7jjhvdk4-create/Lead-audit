@@ -3,10 +3,23 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DocumentViewer } from '@/components/DocumentViewer';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
+  content: string;
+}
+
+interface Document {
+  id: string;
+  title: string;
+  type: string;
+  category: string;
+  annexSLChapter: number;
+  revision: string;
+  lastUpdated: string;
+  approvedBy: string;
   content: string;
 }
 
@@ -61,10 +74,44 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
   const [isLoading, setIsLoading] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDocuments, setShowDocuments] = useState(false);
+  const [documents, setDocuments] = useState<Array<{ id: string; title: string; type: string; category: string; annexSLChapter: number; revision: string; lastUpdated: string }>>([]);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [loadingDocs, setLoadingDocs] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedStandards = config.standard.split(',');
+
+  // Hämta dokument för valda kapitel
+  const fetchDocuments = useCallback(async (chapter?: number) => {
+    setLoadingDocs(true);
+    try {
+      const url = chapter ? `/api/documents?chapter=${chapter}` : '/api/documents';
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setDocuments(data);
+      }
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, []);
+
+  // Hämta ett specifikt dokument
+  const fetchDocument = async (id: string) => {
+    try {
+      const response = await fetch(`/api/documents?id=${id}`);
+      if (response.ok) {
+        const doc = await response.json();
+        setSelectedDocument(doc);
+      }
+    } catch (err) {
+      console.error('Error fetching document:', err);
+    }
+  };
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -287,6 +334,88 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
               {messages.filter(m => m.role === 'user').length} / 50
             </p>
           </div>
+
+          {/* Dokumentbibliotek */}
+          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+            <button
+              onClick={() => {
+                setShowDocuments(!showDocuments);
+                if (!showDocuments && documents.length === 0) {
+                  fetchDocuments();
+                }
+              }}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Dokument
+              </h3>
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform ${showDocuments ? 'rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showDocuments && (
+              <div className="mt-3">
+                {/* Kapitelfilter */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <button
+                    onClick={() => fetchDocuments()}
+                    className="px-2 py-0.5 text-xs rounded bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500"
+                  >
+                    Alla
+                  </button>
+                  {config.annexSLChapters.sort((a, b) => a - b).map((ch) => (
+                    <button
+                      key={ch}
+                      onClick={() => fetchDocuments(ch)}
+                      className="px-2 py-0.5 text-xs rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/30"
+                    >
+                      Kap {ch}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Dokumentlista */}
+                {loadingDocs ? (
+                  <div className="flex justify-center py-2">
+                    <svg className="animate-spin h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {documents.map((doc) => (
+                      <button
+                        key={doc.id}
+                        onClick={() => fetchDocument(doc.id)}
+                        className="w-full text-left p-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className={`px-1 py-0.5 rounded text-[10px] font-medium ${
+                            doc.type === 'chart' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' :
+                            doc.type === 'register' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
+                            doc.type === 'report' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                            'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                          }`}>
+                            {doc.type === 'chart' ? '📊' : doc.type === 'register' ? '📋' : doc.type === 'report' ? '📄' : doc.type === 'matrix' ? '📈' : '📑'}
+                          </span>
+                          <span className="text-gray-500 dark:text-gray-400">Kap {doc.annexSLChapter}</span>
+                        </div>
+                        <p className="font-medium text-gray-900 dark:text-white truncate">{doc.title}</p>
+                        <p className="text-gray-500 dark:text-gray-400">Rev {doc.revision}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="p-4 border-t border-gray-200 dark:border-gray-700">
@@ -441,6 +570,14 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
           }
         }
       `}</style>
+
+      {/* Dokumentvisare modal */}
+      {selectedDocument && (
+        <DocumentViewer
+          document={selectedDocument}
+          onClose={() => setSelectedDocument(null)}
+        />
+      )}
     </div>
   );
 }
