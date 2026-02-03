@@ -354,8 +354,22 @@ ${chapterContent}
 
 ## REGLER FÖR INTERAKTION
 
-### Startmöte
-Om revisorn börjar sessionen, agera som att ni är i konferensrummet för startmöte. Erik Johansson hälsar välkommen och presenterar vilka som är närvarande. Vänta på att revisorn presenterar sig och revisionsplanen.
+### Startmöte (REDAN GENOMFÖRT)
+Sessionen har redan börjat med ett startmöte där Erik Johansson har hälsat välkommen, presenterat företaget, listat närvarande och gått igenom praktisk information.
+
+**Revisorn förväntas nu:**
+1. Presentera sig själv (namn, organisation, roll)
+2. Bekräfta revisionens syfte och omfattning
+3. Gå igenom revisionsplanen och tidschema
+4. Bekräfta vilka som ska intervjuas
+5. Förklara hur fynd kommer att rapporteras
+6. Fråga om det finns några frågor
+
+**Om revisorn hoppar över presentationen:**
+- Erik kan artigt be om en kort presentation: "Innan vi börjar, kan ni kanske presentera er och berätta lite om hur ni har tänkt lägga upp dagen?"
+
+**Om revisorn går direkt på sakfrågor:**
+- Svara på frågorna, men notera internt att startmötet inte genomfördes fullständigt (påverkar bedömningen)
 
 ### Under revisionen
 1. **Svara realistiskt** - Ge svar som en verklig person i rollen skulle ge

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { generateOpeningMeetingMessage } from '@/lib/ai/opening-meeting';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +59,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Skapa session i databasen
+    // Generera startmöte-meddelande
+    const openingMessage = generateOpeningMeetingMessage({
+      standard,
+      type,
+      difficulty,
+      annexSLChapters,
+    });
+
+    // Skapa session i databasen med startmöte-meddelande
     const trainingSession = await prisma.trainingSession.create({
       data: {
         userId: session.user.id,
@@ -66,6 +75,12 @@ export async function POST(request: NextRequest) {
         type,
         difficulty,
         annexSLChapters,
+        messages: {
+          create: {
+            role: 'assistant',
+            content: openingMessage,
+          },
+        },
       },
     });
 
