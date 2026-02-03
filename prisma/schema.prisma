@@ -73,6 +73,7 @@ model SessionFeedback {
   developmentAreas      String[] // Lista över utvecklingsområden
   missedFindings        String[] // Vad som missades
   alternativeStrategies String[] // Förslag på alternativa frågestrategier
+  isoReferences         String[] // ISO 19011 referenser för förbättring
 
   // Bedömning per Annex SL-kapitel (JSON)
   annexSLAssessment     Json?

@@ -7,18 +7,97 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const feedbackPrompt = `Du är en erfaren bedömare av revisorsträning enligt ISO 19011.
+const feedbackPrompt = `Du är en erfaren bedömare av revisorsträning enligt ISO 19011:2018.
 Analysera revisionskonversationen och ge en detaljerad bedömning av revisorns prestation.
 
-Bedöm följande områden på en skala 1-5:
-1. **Revisionsprinciper** (integritet, opartiskhet, professionalism)
-2. **Frågeteknik** (öppna frågor, fördjupning, logisk sekvens)
-3. **Standardkunskap** (korrekt referens, processansats, koppling mellan krav)
-4. **Bevisinhämtning** (objektiva bevis, triangulering, dokumentgranskning)
-5. **Avvikelseklassificering** (korrekt klassificering om tillämpligt)
-6. **Kommunikation** (tydlighet, respekt, bekräftar förståelse)
-7. **Startmöte** (om genomfört - presentation, syfte, plan)
-8. **Slutmöte** (om genomfört - sammanfattning, fynd, nästa steg)
+## BEDÖMNINGSKRITERIER ENLIGT ISO 19011
+
+### 1. Revisionsprinciper (ISO 19011:2018, kapitel 4)
+Bedöm om revisorn visar:
+- **Integritet**: Utför arbetet ärligt, ansvarsfullt och opartiskt
+- **Opartiskhet**: Rapporterar sanningsenligt och korrekt
+- **Professionalism**: Visar kompetens och yrkesskicklighet
+- **Konfidentialitet**: Hanterar information korrekt
+- **Oberoende**: Agerar fritt från partiskhet och intressekonflikt
+- **Faktabaserat förhållningssätt**: Baserar slutsatser på verifierbara bevis
+- **Riskbaserat tänkande**: Identifierar och prioriterar risker
+
+### 2. Frågeteknik
+Bedöm revisorns förmåga att:
+- Ställa **öppna frågor** (vad, hur, varför, vem, när)
+- Använda **fördjupningsfrågor** för att förstå orsaker
+- Följa en **logisk sekvens** från övergripande till detaljerat
+- Undvika **ledande frågor** som förutsätter svar
+- Praktisera **aktivt lyssnande** och bygga vidare på svar
+
+### 3. Standardkunskap
+Bedöm revisorns:
+- Korrekta referenser till **specifika standardkrav** (kapitel, krav)
+- Förståelse för **processansatsen** och PDCA-cykeln
+- Tillämpning av **riskbaserat tänkande**
+- Förmåga att se **kopplingar mellan krav** och processer
+- Kunskap om **Annex SL-strukturen** (kapitel 4-10)
+
+### 4. Bevisinhämtning
+Bedöm revisorns förmåga att:
+- Samla **objektiva bevis** (inte antaganden)
+- Använda **triangulering** (dokument + intervju + observation)
+- Granska **dokument** kritiskt (giltighet, revision, godkännande)
+- Göra **observationer** på plats (om tillämpligt)
+- Koppla bevis till **specifika krav**
+
+### 5. Avvikelseklassificering
+Bedöm om revisorn kan:
+- Skilja mellan **större avvikelse** (systemfel, total frånvaro av krav)
+- Identifiera **mindre avvikelse** (enstaka brister, delvis efterlevnad)
+- Notera **förbättringsmöjligheter** (god praxis som saknas)
+- Formulera avvikelser med **krav + bevis + slutsats**
+
+### 6. Kommunikation
+Bedöm revisorns:
+- **Tydlighet** i frågor och uttalanden
+- **Respekt** och professionellt bemötande
+- Förmåga att **förklara syfte** med frågor
+- **Sammanfattning** av information för bekräftelse
+- **Bekräftelse av förståelse** innan avslut
+
+### 7. Startmöte (om genomfört)
+Bedöm om revisorn:
+- Presenterade sig och sin roll
+- Bekräftade revisionsomfattning och mål
+- Gick igenom revisionsplanen
+- Förklarade hur avvikelser rapporteras
+- Frågade om det fanns frågor
+
+### 8. Slutmöte (om genomfört)
+Bedöm om revisorn:
+- Sammanfattade revisionen
+- Presenterade fynd tydligt och strukturerat
+- Gav företaget möjlighet att kommentera
+- Förklarade nästa steg
+- Tackade för samarbetet
+
+## POÄNGSKALA 1-5
+
+1 = **Otillräcklig** - Uppfyller inte grundläggande krav, betydande brister
+2 = **Under förväntan** - Uppfyller delvis krav men med påtagliga brister
+3 = **Godkänd** - Uppfyller grundläggande krav, viss förbättringspotential
+4 = **Bra** - Uppfyller krav väl med mindre förbättringsmöjligheter
+5 = **Utmärkt** - Uppfyller alla krav på hög nivå, god praxis
+
+## AVVIKELSER I DENNA SESSION
+
+Följande avvikelser fanns i scenariot som revisorn kunde ha upptäckt:
+- Intressentanalys inte uppdaterad på över 1 år (kap 4.2)
+- Kvalitetspolicy från 2022 saknar aktuella fokusområden (kap 5.2)
+- Kundreklamationer över target (0.7% vs mål 0.5%) (kap 6.2)
+- Högriskåtgärd utan deadline (kap 6.1)
+- Nyanställd Henrik Lund saknar dokumenterad utbildning (kap 7.2)
+- Förfallen kalibrering på toleranstolk MÄT-008 (kap 7.1.5)
+- Cpk under krav på kontrollplan (kap 8.5)
+- Leverantör inte godkänd/utvärderad (kap 8.4)
+- Internrevision av inköp ej genomförd enligt plan (kap 9.2)
+- Korrigerande åtgärder ej verifierade inom deadline (kap 10.2)
 
 Svara ENDAST med giltig JSON i följande format:
 {
@@ -33,8 +112,9 @@ Svara ENDAST med giltig JSON i följande format:
   "overallScore": <1-5 viktat genomsnitt>,
   "strengths": ["styrka 1", "styrka 2", ...],
   "developmentAreas": ["utvecklingsområde 1", "utvecklingsområde 2", ...],
-  "missedFindings": ["vad som missades 1", ...],
-  "alternativeStrategies": ["förslag 1", "förslag 2", ...],
+  "missedFindings": ["kort beskrivning av avvikelse som missades", ...],
+  "alternativeStrategies": ["förslag på alternativ fråga eller strategi", ...],
+  "isoReferences": ["ISO 19011:2018 referens för förbättring", ...],
   "summary": "Sammanfattande bedömning på 2-3 meningar"
 }`;
 
@@ -162,6 +242,7 @@ ${conversationText}
         developmentAreas: feedbackData.developmentAreas || [],
         missedFindings: feedbackData.missedFindings || [],
         alternativeStrategies: feedbackData.alternativeStrategies || [],
+        isoReferences: feedbackData.isoReferences || [],
         summary: feedbackData.summary,
       },
     });
