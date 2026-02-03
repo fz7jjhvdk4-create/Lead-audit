@@ -210,7 +210,18 @@ export function SessionChat({ sessionId, initialMessages, config }: SessionChatP
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ett fel uppstod');
+      // Förbättrad felhantering
+      let errorMessage = 'Ett fel uppstod';
+      if (err instanceof Error) {
+        if (err.name === 'AbortError' || err.message === 'aborted') {
+          errorMessage = 'Anropet avbröts. Detta kan bero på timeout eller nätverksproblem. Försök igen.';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = 'Kunde inte nå servern. Kontrollera din internetanslutning.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
       // Ta bort det tomma AI-meddelandet vid fel
       setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
     } finally {
